@@ -27,10 +27,13 @@ class Pole:
         self.h = h
         self.x = x
         self.y = y
+        self.m_x = None # x středu křížku na Masks img
+        self.m_y = None # y středu křížku na Masks img
         self.alfa = alfa
         self.color = color
         self.contours = contours
         self.pos = ()
+        self.topdown_pos = ()
         self.ID = None
 
 
