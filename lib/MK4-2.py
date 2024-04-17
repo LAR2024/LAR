@@ -14,6 +14,9 @@ bumper_names = ['LEFT', 'CENTER', 'RIGHT']
 state_names = ['RELEASED', 'PRESSED']
 
 
+
+
+
 class Masks:
     def __init__(self, r_mask, g_mask, b_mask, c_mask, masked_img):
         self.r_mask = r_mask
