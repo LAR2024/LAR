@@ -9,7 +9,7 @@ pass: .....
 
 mount /local
 
-singularity shell /local/robolab_noentic.simg
+singularity shell /local/robolab_noetic.simg
 
 source /opt/ros/lar/setup.bash
 
@@ -24,7 +24,7 @@ pass: .....
 
 mount /local
 
-singularity shell /local/robolab_noentic.simg
+singularity shell /local/robolab_noetic.simg
 
 source /opt/ros/lar/setup.bash
 ```
