@@ -327,7 +327,7 @@ class Control:
 
         for x in range(len(pc[0])):
             p_x,p_y,p_z = pc[int((60/100)*h)][x]
-            if not np.isnan(p_x) and not np.isnan(p_y) and not np.isnan(p_z):
+            if not ; and not np.isnan(p_y) and not np.isnan(p_z):
                 rx = int(round(w / 2 + p_x * 200))
                 ry = int(round(h - 10 - p_z * 200))
                 if 0<=rx<800 and 0<=ry<480:
