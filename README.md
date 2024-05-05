@@ -4,7 +4,7 @@ Robot setup:
 cmd1:
 
 ```
-ssh -X erbenma2@turtle...
+ssh -X user@turtle..
 pass: .....
 
 mount /local

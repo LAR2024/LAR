@@ -4,7 +4,7 @@ import numpy as np
 WHITE = (255, 255, 255)
 
 
-def draw_pairs(pairs,blank_img):    # TODO: add comments
+def draw_pairs(pairs,blank_img, target_pos):    # TODO: add comments
     # TODO: docstring
 
     for pair in pairs:
@@ -27,7 +27,7 @@ def draw_pairs(pairs,blank_img):    # TODO: add comments
                        markerType=cv2.MARKER_TILTED_CROSS, line_type=cv2.LINE_AA,
                        markerSize=10)
 
-        cv2.line(blank_img, pair.p_pos , (int(w / 2), int(h - 10)), (128, 0, 128), 2)
+        cv2.line(blank_img, target_pos , (int(w / 2), int(h - 10)), (0, 127, 255), 1)
 
         cv2.line(blank_img, pole1.topdown_pos.pos, pole2.topdown_pos.pos, (0, 255, 255), 1)
 

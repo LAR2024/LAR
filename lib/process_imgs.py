@@ -13,7 +13,6 @@ def get_pairs_from_cams(image, pc):
     contours = get_contours(masks)
     poles = get_poles(contours, pc)
     pairs = find_doubles(poles)
-    print('14:45')
 
     return pairs, poles, vision_image
 
@@ -94,7 +93,8 @@ def get_poles(contours,pc):     # TODO: add better pole recognition, add comment
             new_pole = Pole(w, h, x, y, 'r', cnt,pc)
             new_pole.ID = ID
             ID+=1
-            poles.append(new_pole)
+            if new_pole.VALID:
+                poles.append(new_pole)
 
     for cnt in contours.contours_g:
         x, y, w, h = cv2.boundingRect(cnt)
@@ -102,7 +102,8 @@ def get_poles(contours,pc):     # TODO: add better pole recognition, add comment
             new_pole = Pole(w, h, x, y, 'g', cnt,pc)
             new_pole.ID = ID
             ID += 1
-            poles.append(new_pole)
+            if new_pole.VALID:
+                poles.append(new_pole)
 
     for cnt in contours.contours_b:
         x, y, w, h = cv2.boundingRect(cnt)
@@ -110,7 +111,8 @@ def get_poles(contours,pc):     # TODO: add better pole recognition, add comment
             new_pole = Pole(w, h, x, y, 'b', cnt,pc)
             new_pole.ID = ID
             ID += 1
-            poles.append(new_pole)
+            if new_pole.VALID:
+                poles.append(new_pole)
 
     return poles
 

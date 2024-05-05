@@ -25,8 +25,8 @@ class PoleMaskSize:
     def __init__(self,w,h,x,y):
         self.w = w
         self.h = h
-        self.x = x
-        self.y = y
+        self.x = x  # on img left to right
+        self.y = y  # on img up to down
 
         self.middle_x = self.x + round(self.w/2)
         self.middle_y = self.y + round(self.h/2)
@@ -40,16 +40,18 @@ class PoleTopdownPos:
         WIDTH = 640
         HEIGHT = 480
 
-        self.x = int(round(WIDTH/2+pc_pos.x*200))
-        self.y = int(round(HEIGHT-pc_pos.z*200))
+        self.x = int(round(WIDTH/2+pc_pos.x*200))   # on img from left to right
+        self.y = int(round(HEIGHT- pc_pos.y*200))   # on img from top to down
         self.pos = (self.x, self.y)
 
 
 class PolePCPos:
     def __init__(self, masked_pos, pc):
-        self.x = None
-        self.y = None
-        self.z = None
+        self.x = None   # left to right from turtle
+        self.y = None   # back to front from turtle
+        self.z = None   # down to up from turtle
+
+        self.pos = (self.x, self.y, self.z)
 
         (a,b) =self.__get_delta(masked_pos, pc)
 
@@ -82,23 +84,32 @@ class PolePCPos:
             dy /= index
             dz /= index
 
-            self.x = dx
-            self.y = dy
-            self.z = dz
+
+            self.__pc_xyz_to_xyz(dx,dy,dz)
+
             return (round(x + w / 2), round(y + h / 2))
         else:
             return (None, None)
 
+    def __pc_xyz_to_xyz(self, x,y,z):
+        self.x = x
+        self.y = z
+        self.z = -y
+
+        self.pos = (self.x, self.y, self.z)
+
 
 class PolePos:
     def __init__(self,x,y,z):
-        self.x = x
-        self.y = y
-        self.z = z
+        self.x = x  # left to right from turtle
+        self.y = y  # back to front from turtle
+        self.z = z  # down to up from turtle
 
+        self.pos= (self.x, self.y, self.z)
 
 class Pole:
     def __init__(self, w, h, x, y, color=None, contours = None, pc= None):
+        self.VALID = True
 
         self.mask_pos = PoleMaskSize(w,h,x,y)
 
@@ -110,7 +121,13 @@ class Pole:
 
         self.contours = contours
         self.pos = PolePos(self.pc_pos.x,self.pc_pos.y,self.pc_pos.z)
-        self.topdown_pos = PoleTopdownPos(self.pc_pos)
+
+        if self.pc_pos.pos != (None, None, None):
+            self.topdown_pos = PoleTopdownPos(self.pc_pos)
+        else:
+            self.topdown_pos = None
+            self.VALID = False
+
         self.ID = None
 
     def __set_rgb(self):
