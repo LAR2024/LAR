@@ -15,15 +15,15 @@ def draw_pairs(pairs,blank_img, target_pos):    # TODO: add comments
         h = 480
 
 
-        cv2.drawMarker(blank_img, pair.mid_pos, color=[0, 255, 255], thickness=1,
+        cv2.drawMarker(blank_img, pair.mid.topdown.pos, color=[0, 255, 255], thickness=1,
                        markerType=cv2.MARKER_TILTED_CROSS, line_type=cv2.LINE_AA,
                        markerSize=10)
 
-        cv2.drawMarker(blank_img, pair.t_pos, color=[255, 255, 0], thickness=1,
+        cv2.drawMarker(blank_img, pair.help.topdown.pos, color=[255, 255, 0], thickness=1,
                        markerType=cv2.MARKER_TILTED_CROSS, line_type=cv2.LINE_AA,
                        markerSize=10)
 
-        cv2.drawMarker(blank_img, pair.p_pos, color=[128, 0, 128], thickness=1,
+        cv2.drawMarker(blank_img, pair.park.topdown.pos, color=[128, 0, 128], thickness=1,
                        markerType=cv2.MARKER_TILTED_CROSS, line_type=cv2.LINE_AA,
                        markerSize=10)
 
@@ -90,7 +90,7 @@ def draw_topdown(poles,pc):      # TODO: rework walls drawing
 
     # TODO: draw walls
     for x in range(len(pc[0])):
-        p_x,p_y,p_z = pc[int((60/100)*h)][x]
+        p_x,p_y,p_z = pc[int((40/100)*h)][x]
         if not np.isnan(p_x) and not np.isnan(p_y) and not np.isnan(p_z):
             rx = int(round(w / 2 + p_x * 200))
             ry = int(round(h - p_z * 200))

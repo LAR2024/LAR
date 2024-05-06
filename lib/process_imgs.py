@@ -68,7 +68,7 @@ def make_masks(img):     # TODO: rework/prettify
     return fil
 
 
-def get_contours(masks):    # TODO: add comments
+def get_contours(masks: Masks) -> Contours:    # TODO: add comments
     """ function that founds contours of r,g,b masks
 
         :parameter masks    # tuple of (r,g,b) masks
@@ -83,7 +83,7 @@ def get_contours(masks):    # TODO: add comments
     return contours
 
 
-def get_poles(contours,pc):     # TODO: add better pole recognition, add comments
+def get_poles(contours: Contours,pc) -> Poles:     # TODO: add better pole recognition, add comments
     # TODO: docstring
     ID = 0
     poles = Poles()
@@ -117,7 +117,7 @@ def get_poles(contours,pc):     # TODO: add better pole recognition, add comment
     return poles
 
 
-def find_doubles(poles):    # TODO: add comments, prettify
+def find_doubles(poles: Poles) -> list:    # TODO: add comments, prettify
     # TODO: docstring
 
     Pairs_id = []

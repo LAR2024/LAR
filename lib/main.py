@@ -34,28 +34,69 @@ class NewControl:
         self.turtle.wait_for_point_cloud()
 
     def main_loop(self):
+        last_last_pairs = []
+        last_pairs = []
         while not self.turtle.is_shutting_down():
             image, pc = self.get_turtle_images()
             if image is not None and pc is not None:
-                print("16:53")
+                print("19:46")
                 pairs, poles, vision_image = process_imgs.get_pairs_from_cams(image,pc)
+
+                """if pairs!=[]:
+                    print(pairs[0].help.local.pos)
+
+                if last_pairs!=[]:
+                    print(last_pairs[0].help.local.pos)
+
+                if last_last_pairs!=[]:
+                    print(last_last_pairs[0].help.local.pos)"""
+
 
 
                 if len(pairs) > 0:
-                    target_pos = pairs[0].t_pos
-                else:
-                    target_pos = (0,0)
+                    target_pos = pairs[0].help
+
+                if last_last_pairs!=[] and last_pairs != [] and pairs != []:
+                    target_pos_x = (pairs[0].help.local.x + last_pairs[0].help.local.x + last_last_pairs[
+                        0].help.local.x) / 3
+                    target_pos_y = (pairs[0].help.local.y + last_pairs[0].help.local.y + last_last_pairs[
+                        0].help.local.y) / 3
+
+                    print(target_pos_x,target_pos_y)
+                    #self.move2xyf(target_pos_x,target_pos_y, 0)
+                    pass
 
                 if self.DRAW:
                     draw_imgs.draw_poles(vision_image, poles)
                     draw_imgs.draw_mid(vision_image)
                     topdown_img = draw_imgs.draw_topdown(poles, pc)
-                    topdown_img = draw_imgs.draw_pairs(pairs, topdown_img, target_pos)
+                    if len(pairs) > 0:
+                        topdown_img = draw_imgs.draw_pairs(pairs, topdown_img, target_pos.topdown.pos)
 
                     random.draw_image('CAM-Image', image, (0,0))
                     random.draw_image('CAM-Point_Cloud', pc, (0,550))
                     random.draw_image('MASKS', vision_image, (650,0))
                     random.draw_image('TOPDOWN', topdown_img, (650,550))
+
+                last_last_pairs = last_pairs
+                last_pairs = pairs
+
+    def update_imgs(self):
+        image, pc = self.get_turtle_images()
+        if image is not None and pc is not None:
+            pairs, poles, vision_image = process_imgs.get_pairs_from_cams(image,pc)
+
+            if self.DRAW:
+                draw_imgs.draw_poles(vision_image, poles)
+                draw_imgs.draw_mid(vision_image)
+                topdown_img = draw_imgs.draw_topdown(poles, pc)
+
+                topdown_img = draw_imgs.draw_pairs(pairs, topdown_img, (0,0))
+
+                random.draw_image('CAM-Image', image, (0,0))
+                random.draw_image('CAM-Point_Cloud', pc, (0,550))
+                random.draw_image('MASKS', vision_image, (650,0))
+                random.draw_image('TOPDOWN', topdown_img, (650,550))
 
 
 
