@@ -38,40 +38,75 @@ class NewControl:
         last_pairs = []
         while not self.turtle.is_shutting_down():
             image, pc = self.get_turtle_images()
+
+            number_of_samples = 0
+            sum_w1 = 0
+            sum_h1 = 0
+            sum_x1 = 0
+            sum_y1 = 0
+
+            sum_w2 = 0
+            sum_h2 = 0
+            sum_x2 = 0
+            sum_y2 = 0
+
             if image is not None and pc is not None:
-                print("19:46")
+                print("15:37")
                 pairs, poles, vision_image = process_imgs.get_pairs_from_cams(image,pc)
 
-                """if pairs!=[]:
-                    print(pairs[0].help.local.pos)
+                if pairs != []:
+                    pair = pairs[0]
 
-                if last_pairs!=[]:
-                    print(last_pairs[0].help.local.pos)
+                    pole1 = pair.pole_1
+                    pole2 = pair.pole_2
 
-                if last_last_pairs!=[]:
-                    print(last_last_pairs[0].help.local.pos)"""
+                    sum_w1 += pole1.mask_pos.w
+                    sum_h1 += pole1.mask_pos.h
+                    sum_x1 += pole1.mask_pos.x
+                    sum_y1 += pole1.mask_pos.y
+
+                    sum_w2 += pole2.mask_pos.w
+                    sum_h2 += pole2.mask_pos.h
+                    sum_x2 += pole2.mask_pos.x
+                    sum_y2 += pole2.mask_pos.y
+
+                    number_of_samples += 1
 
 
 
-                if len(pairs) > 0:
-                    target_pos = pairs[0].help
+                    w1 = sum_w1 / number_of_samples
+                    h1 = sum_h1 / number_of_samples
+                    x1 = sum_x1 / number_of_samples
+                    y1 = sum_y1 / number_of_samples
 
-                if last_last_pairs!=[] and last_pairs != [] and pairs != []:
-                    target_pos_x = (pairs[0].help.local.x + last_pairs[0].help.local.x + last_last_pairs[
-                        0].help.local.x) / 3
-                    target_pos_y = (pairs[0].help.local.y + last_pairs[0].help.local.y + last_last_pairs[
-                        0].help.local.y) / 3
+                    w2 = sum_w2 / number_of_samples
+                    h2 = sum_h2 / number_of_samples
+                    x2 = sum_x2 / number_of_samples
+                    y2 = sum_y2 / number_of_samples
+
+
+
+                    pole_1 = classes.Pole(w1, h1, x1, y1, pole1.color)
+                    pole_2 = classes.Pole(w2, h2, x2, y2, pole2.color)
+
+                    NewPair = classes.Pair(pole_1,pole_2)
+
+
+
+                    target_pos_x = NewPair.help.local.x
+                    target_pos_y = NewPair.help.local.y
+
 
                     print(target_pos_x,target_pos_y)
                     #self.move2xyf(target_pos_x,target_pos_y, 0)
                     pass
 
-                if self.DRAW:
+                if self.DRAW and pairs != [] :
                     draw_imgs.draw_poles(vision_image, poles)
                     draw_imgs.draw_mid(vision_image)
                     topdown_img = draw_imgs.draw_topdown(poles, pc)
                     if len(pairs) > 0:
-                        topdown_img = draw_imgs.draw_pairs(pairs, topdown_img, target_pos.topdown.pos)
+                        topdown_img = draw_imgs.draw_pairs(pairs, topdown_img, NewPair.help.pos)
 
                     random.draw_image('CAM-Image', image, (0,0))
                     random.draw_image('CAM-Point_Cloud', pc, (0,550))
@@ -97,9 +132,6 @@ class NewControl:
                 random.draw_image('CAM-Point_Cloud', pc, (0,550))
                 random.draw_image('MASKS', vision_image, (650,0))
                 random.draw_image('TOPDOWN', topdown_img, (650,550))
-
-
-
 
     def get_turtle_images(self):
         image = self.turtle.get_rgb_image()
