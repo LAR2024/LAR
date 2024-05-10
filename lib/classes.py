@@ -107,6 +107,7 @@ class PolePos:
 
         self.pos = (self.x, self.y, self.z)
 
+
 class Pole:
     def __init__(self, w, h, x, y, color=None, contours = None, pc= None):
         self.VALID = True
@@ -191,19 +192,14 @@ class Pair:
         self.help = None
 
         self.__set_mid()
-        self.__set_t()
+        self.__set_help()
         self.__set_p()
 
 
     def __set_mid(self):
-        v_p1_m_x = (self.pole_2.pos.x - self.pole_1.pos.x) / 2
-        v_p1_m_y = (self.pole_2.pos.y - self.pole_1.pos.y) / 2
-        v_p1_m_z = (self.pole_2.pos.z - self.pole_1.pos.z) / 2
-
-        mid_x = self.pole_1.pos.x + v_p1_m_x
-        mid_y = self.pole_1.pos.y + v_p1_m_y
-        mid_z = self.pole_1.pos.z + v_p1_m_z
-
+        mid_x = self.pole_1.pos.x + (self.pole_2.pos.x - self.pole_1.pos.x) / 2
+        mid_y = self.pole_1.pos.y + (self.pole_2.pos.y - self.pole_1.pos.y) / 2
+        mid_z = self.pole_1.pos.z + (self.pole_2.pos.z - self.pole_1.pos.z) / 2
 
         topdown_mid_x = round(self.pole_1.topdown_pos.x + (self.pole_2.topdown_pos.x - self.pole_1.topdown_pos.x) / 2)
         topdown_mid_y = round(self.pole_1.topdown_pos.y + (self.pole_2.topdown_pos.y - self.pole_1.topdown_pos.y) / 2)
@@ -211,90 +207,87 @@ class Pair:
         self.mid = Position(LocalPosition(mid_x,mid_y,mid_z), TopdownPosition(topdown_mid_x,topdown_mid_y))
 
 
-    def __set_t(self):
-        p_x1 = round(self.mid.topdown.x + (self.pole_2.topdown_pos.y - self.pole_1.topdown_pos.y) * 4)
-        p_y1 = round(self.mid.topdown.y - (self.pole_2.topdown_pos.x - self.pole_1.topdown_pos.x) * 4)
-        rng_p1 = round(pow(p_x1 ** 2 + p_y1 ** 2, 0.5))
+    def __set_help(self):
+        top_help_x1 = round(self.mid.topdown.x + (self.pole_2.topdown_pos.y - self.pole_1.topdown_pos.y) * 8)
+        top_help_y1 = round(self.mid.topdown.y - (self.pole_2.topdown_pos.x - self.pole_1.topdown_pos.x) * 8)
+        top_rng_help1 = round(pow(top_help_x1 ** 2 + top_help_y1 ** 2, 0.5))
 
-        p_x2 = round(self.mid.topdown.x - (self.pole_2.topdown_pos.y - self.pole_1.topdown_pos.y) * 4)
-        p_y2 = round(self.mid.topdown.y + (self.pole_2.topdown_pos.x - self.pole_1.topdown_pos.x) * 4)
-        rng_p2 = round(pow(p_x2 ** 2 + p_y2 ** 2, 0.5))
+        top_help_x2 = round(self.mid.topdown.x - (self.pole_2.topdown_pos.y - self.pole_1.topdown_pos.y) * 8)
+        top_help_y2 = round(self.mid.topdown.y + (self.pole_2.topdown_pos.x - self.pole_1.topdown_pos.x) * 8)
+        top_rng_help2 = round(pow(top_help_x2 ** 2 + top_help_y2 ** 2, 0.5))
 
-        if rng_p1 > rng_p2:
-            topdown_p_x = p_x1
-            topdown_p_y = p_y1
+        if top_rng_help1 > top_rng_help2:
+            topdown_p_x = top_help_x1
+            topdown_p_y = top_help_y1
         else:
-            topdown_p_x = p_x2
-            topdown_p_y = p_y2
-
-
+            topdown_p_x = top_help_x2
+            topdown_p_y = top_help_y2
 
 
         v_p1_m_x = (self.pole_2.pos.x - self.pole_1.pos.x) / 2
         v_p1_m_y = (self.pole_2.pos.y - self.pole_1.pos.y) / 2
         v_p1_m_z = (self.pole_2.pos.z - self.pole_1.pos.z) / 2
 
-        mid_x = self.pole_1.pos.x + v_p1_m_x
-        mid_y = self.pole_1.pos.y + v_p1_m_y
-        mid_z = self.pole_1.pos.z + v_p1_m_z
+        mid_x = self.mid.local.x
+        mid_y = self.mid.local.y
+        mid_z = self.mid.local.z
 
+        local_x1 = mid_x + v_p1_m_y * 8
+        local_y1 = mid_y - v_p1_m_x * 8
+        local_z1 = mid_z
+        local_rng_t1 = (local_x1 ** 2 + local_y1 ** 2) ** 0.5
 
-        t_x1 = mid_x + v_p1_m_z * 3
-        t_y1 = mid_y
-        t_z1 = mid_z - v_p1_m_x * 3
-        rng_t1 = (t_x1 ** 2 + t_z1 ** 2) ** 0.5
+        local_x2 = mid_x - v_p1_m_y * 8
+        local_y2 = mid_y + v_p1_m_x * 8
+        local_z2 = mid_z
+        local_rng_t2 = (local_x2 ** 2 + local_y2 ** 2) ** 0.5
 
-        t_x2 = mid_x - v_p1_m_z * 3
-        t_y2 = mid_y
-        t_z2 = mid_z + v_p1_m_x * 3
-        rng_t2 = (t_x2 ** 2 + t_z2 ** 2) ** 0.5
-
-        if rng_t1 < rng_t2:
-            local_t_x = t_x1
-            local_t_y = t_y1
-            local_t_z = t_z1
+        if local_rng_t1 < local_rng_t2:
+            local_t_x = local_x1
+            local_t_y = local_y1
+            local_t_z = local_z1
         else:
-            local_t_x = t_x2
-            local_t_y = t_y2
-            local_t_z = t_z2
+            local_t_x = local_x2
+            local_t_y = local_y2
+            local_t_z = local_z2
 
 
         self.help = Position(LocalPosition(local_t_x, local_t_y, local_t_z), TopdownPosition(topdown_p_x, topdown_p_y))
 
 
     def __set_p(self):
-        t_x1 = round(self.mid.topdown.x + 3 * (self.pole_2.topdown_pos.y - self.pole_1.topdown_pos.y) / 2)
-        t_y1 = round(self.mid.topdown.y - 3 * (self.pole_2.topdown_pos.x - self.pole_1.topdown_pos.x) / 2)
-        rng_t1 = round(pow(t_x1 ** 2 + t_y1 ** 2, 0.5))
+        top_park_x1 = round(self.mid.topdown.x + (self.pole_2.topdown_pos.y - self.pole_1.topdown_pos.y))
+        top_park_y1 = round(self.mid.topdown.y - (self.pole_2.topdown_pos.x - self.pole_1.topdown_pos.x))
+        top_rng_park1 = round(pow(top_park_x1 ** 2 + top_park_y1 ** 2, 0.5))
 
-        t_x2 = round(self.mid.topdown.x - 3 * (self.pole_2.topdown_pos.y - self.pole_1.topdown_pos.y) / 2)
-        t_y2 = round(self.mid.topdown.y + 3 * (self.pole_2.topdown_pos.x - self.pole_1.topdown_pos.x) / 2)
-        rng_t2 = round(pow(t_x2 ** 2 + t_y2 ** 2, 0.5))
+        top_park_x2 = round(self.mid.topdown.x - (self.pole_2.topdown_pos.y - self.pole_1.topdown_pos.y))
+        top_park_y2 = round(self.mid.topdown.y + (self.pole_2.topdown_pos.x - self.pole_1.topdown_pos.x))
+        top_rng_park2 = round(pow(top_park_x2 ** 2 + top_park_y2 ** 2, 0.5))
 
-        if rng_t1 > rng_t2:
-            topdown_t_x = t_x1
-            topdown_t_y = t_y1
+        if top_rng_park1 > top_rng_park2:
+            topdown_t_x = top_park_x1
+            topdown_t_y = top_park_y1
         else:
-            topdown_t_x = t_x2
-            topdown_t_y = t_y2
+            topdown_t_x = top_park_x2
+            topdown_t_y = top_park_y2
 
         v_p1_m_x = (self.pole_2.pos.x - self.pole_1.pos.x) / 2
         v_p1_m_y = (self.pole_2.pos.y - self.pole_1.pos.y) / 2
         v_p1_m_z = (self.pole_2.pos.z - self.pole_1.pos.z) / 2
 
-        mid_x = self.pole_1.pos.x + v_p1_m_x
-        mid_y = self.pole_1.pos.y + v_p1_m_y
-        mid_z = self.pole_1.pos.z + v_p1_m_z
+        mid_x = self.mid.local.x
+        mid_y = self.mid.local.y
+        mid_z = self.mid.local.z
 
-        p_x1 = mid_x + v_p1_m_z * 8
-        p_y1 = mid_y
-        p_z1 = mid_z - v_p1_m_x * 8
-        rng_p1 = (p_x1 ** 2 + p_z1 ** 2) ** 0.5
+        p_x1 = mid_x + v_p1_m_y * 4
+        p_y1 = mid_y - v_p1_m_x * 4
+        p_z1 = mid_z
+        rng_p1 = (p_x1 ** 2 + p_y1 ** 2) ** 0.5
 
-        p_x2 = mid_x - v_p1_m_z * 8
-        p_y2 = mid_y
-        p_z2 = mid_z + v_p1_m_x * 8
-        rng_p2 = (p_x2 ** 2 + p_z2 ** 2) ** 0.5
+        p_x2 = mid_x - v_p1_m_y * 4
+        p_y2 = mid_y + v_p1_m_x * 4
+        p_z2 = mid_z
+        rng_p2 = (p_x2 ** 2 + p_y2 ** 2) ** 0.5
 
         if rng_p1 < rng_p2:
             local_p_x = p_x1
