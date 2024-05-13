@@ -232,28 +232,31 @@ class NewControl:
     def get_nearest_pair(self):
         image, pc = self.get_turtle_images()
 
-        pairs, poles, vision_image = process_imgs.get_pairs_from_cams(image, pc)
+        if image is not None and pc is not None:
+            pairs, poles, vision_image = process_imgs.get_pairs_from_cams(image, pc)
 
 
-        if len(pairs) > 0:
-            close_dist = None
-            close_pair = None
+            if len(pairs) > 0:
+                close_dist = None
+                close_pair = None
 
-            for pair in pairs:
-                new_dist = pair.mid.local.x ** 2 + pair.mid.local.y ** 2
+                for pair in pairs:
+                    new_dist = pair.mid.local.x ** 2 + pair.mid.local.y ** 2
 
-                if close_dist is None:
-                    close_dist = new_dist
-                    close_pair = pair
+                    if close_dist is None:
+                        close_dist = new_dist
+                        close_pair = pair
 
-                elif new_dist < close_dist:
-                    close_dist = new_dist
-                    close_pair = pair
+                    elif new_dist < close_dist:
+                        close_dist = new_dist
+                        close_pair = pair
 
-            self.draw(pairs, poles, vision_image, image, pc, close_pair.mid.topdown.pos)
-            return close_pair
+                self.draw(pairs, poles, vision_image, image, pc, close_pair.mid.topdown.pos)
+                return close_pair
+            else:
+                self.draw(pairs, poles, vision_image, image, pc, (0, 0))
+                return None
         else:
-            self.draw(pairs, poles, vision_image, image, pc, (0, 0))
             return None
 
 
@@ -262,7 +265,7 @@ class NewControl:
             image, pc = self.get_turtle_images()
 
             if image is not None and pc is not None:
-                close_pair = self.get_nearest_pair(image, pc)
+                close_pair = self.get_nearest_pair()
 
                 print(close_pair.mid.local.y, close_pair.mid.local.x)
                 fi = math.atan2(close_pair.mid.local.y, close_pair.mid.local.x) - math.pi/2
@@ -287,11 +290,12 @@ class NewControl:
                     print('Turn = 0')
                     break
                 else:
+                    self.move(-0.1, 0.3)
+                    self.rotate(Turn * math.pi / 2, 0.5)
+                    self.move(0.1, 0.3)
+
                     Turn = 0
 
-                self.move(-0.1)
-                self.rotate(Turn*math.pi/2)
-                self.move(0.1)
 
                 Help = False
                 Park = False
@@ -316,6 +320,7 @@ class NewControl:
                 else:
                     Turn = 0
 
+            print('Turn:',Turn)
 
             if not Help and not Park:
                 x = close_pair.help.local.x
@@ -326,7 +331,7 @@ class NewControl:
                 print('move to help and rotate to park')
                 print(x,y,fi)
 
-                self.move2xyf(x, y, fi)
+                self.move2xyf(x, y, fi, True)
                 print('end of move to help')
                 Help = True
 
@@ -349,6 +354,7 @@ class NewControl:
 
     def draw(self, pairs, poles, vision_image, image, pc, pos):
         if self.DRAW:
+            draw_imgs.draw_mid(image)
             draw_imgs.draw_poles(vision_image, poles)
             draw_imgs.draw_mid(vision_image)
             topdown_img = draw_imgs.draw_topdown(poles, pc)
@@ -365,17 +371,7 @@ class NewControl:
         if image is not None and pc is not None:
             pairs, poles, vision_image = process_imgs.get_pairs_from_cams(image,pc)
 
-            if self.DRAW:
-                draw_imgs.draw_poles(vision_image, poles)
-                draw_imgs.draw_mid(vision_image)
-                topdown_img = draw_imgs.draw_topdown(poles, pc)
-
-                topdown_img = draw_imgs.draw_pairs(pairs, topdown_img, (0,0))
-
-                random.draw_image('CAM-Image', image, (0,0))
-                random.draw_image('CAM-Point_Cloud', pc, (0,550))
-                random.draw_image('MASKS', vision_image, (650,0))
-                random.draw_image('TOPDOWN', topdown_img, (650,550))
+            self.draw(pairs, poles,vision_image, image, pc, (0,0))
 
     def get_turtle_images(self):
         image = self.turtle.get_rgb_image()
@@ -387,13 +383,18 @@ class NewControl:
         else:
             return None, None
 
-    def move2xyf(self, x,y,gamma):
+    def move2xyf(self, x,y,gamma, fast=False):
         fi = math.atan2(y,x) - math.pi/2
         dist = math.sqrt(pow(x,2)+pow(y,2))
 
-        self.rotate(fi)
-        self.move(dist)
-        self.rotate(-fi+gamma)
+        if not fast:
+            self.rotate(fi)
+            self.move(dist)
+            self.rotate(-fi+gamma)
+        else:
+            self.rotate(fi)
+            self.move(dist,0.5)
+            self.rotate(-fi + gamma)
 
     def get_odometry(self):
         a,b,gamma = self.turtle.get_odometry()
@@ -403,20 +404,26 @@ class NewControl:
         fi = gamma
         return x,y,fi
 
-    def rotate(self, pl_fi):
+    def rotate(self, pl_fi, speed = 0.3):
         self.turtle.reset_odometry()
         fi = pl_fi
         while abs(fi)>0.01:
             od_x, od_y, od_fi = self.get_odometry()
 
-            fi = pl_fi-od_fi
+            """if pl_fi>0:
+                fi = pl_fi-od_fi
+            else:
+                fi = pl_fi + od_fi"""
+
+            fi = pl_fi - od_fi
+
             #print(fi)
             direction = fi / abs(fi)
-            self.turtle.cmd_velocity(angular=direction * 0.3)
+            self.turtle.cmd_velocity(angular=direction * speed)
         self.turtle.cmd_velocity(angular=0)
         time.sleep(1)
 
-    def move(self, pl_dist):
+    def move(self, pl_dist, speed = 0.1):
         self.turtle.reset_odometry()
         dist = pl_dist
         while abs(dist)>0.01:
@@ -431,6 +438,40 @@ class NewControl:
             direction = dist / abs(dist)
 
             #print(dist,direction)
-            self.turtle.cmd_velocity(linear=direction * 0.1)
+            self.turtle.cmd_velocity(linear=direction * speed)
         self.turtle.cmd_velocity(linear=0)
         time.sleep(1)
+
+    def new_move(self, distance, speed_up=False):
+        self.turtle.reset_odometry()
+
+        dist_err = distance
+
+        while abs(dist_err) > 0.01:
+            print('10')
+            od_x, od_y, od_fi = self.get_odometry()
+            od_distance = od_y
+
+            dist_err = distance - od_distance
+
+            direction = dist_err / abs(dist_err)
+
+            speed_up_time = 0.2
+            slow_down_time = 0.1
+            fast_speed = 1
+            slow_speed = 0.3
+
+            actual_speed = slow_speed
+            if speed_up:
+                if dist_err > (1-speed_up_time) * distance:
+                    actual_speed = ((1 - dist_err / distance) / speed_up_time) * (fast_speed - slow_speed) + slow_speed
+                elif dist_err > slow_down_time * distance:
+                    actual_speed = fast_speed
+                elif dist_err > 0:
+                    actual_speed = fast_speed - (fast_speed-slow_speed) * (1 - (dist_err / distance) / slow_down_time)
+            else:
+                actual_speed = slow_speed
+            self.turtle.cmd_velocity(linear=direction * actual_speed)
+        self.turtle.cmd_velocity(linear=0)
+        time.sleep(1)
+

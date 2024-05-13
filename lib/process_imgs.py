@@ -89,7 +89,7 @@ def get_poles(contours: Contours,pc) -> Poles:     # TODO: add better pole recog
     poles = Poles()
     for cnt in contours.contours_r:
         x, y, w, h = cv2.boundingRect(cnt)
-        if w * h > 500 and w * 3 < h and w * 9 > h:
+        if w * h > 500 and w * 3 < h and w * 10 > h:
             new_pole = Pole(w, h, x, y, 'r', cnt,pc)
             new_pole.ID = ID
             ID+=1
@@ -137,5 +137,3 @@ def find_doubles(poles: Poles) -> list:    # TODO: add comments, prettify
             else:
                 print("err None in pole.pos")
     return Pairs
-
-
