@@ -1,12 +1,23 @@
 from lib.main import NewControl
 import math
 
-print("20:03")
+print("19:41")
 
 xd = NewControl()
 
 #xd.rotate(math.pi)
 #xd.move(-0.1)
+
+xd.update_imgs()
+xd.update_imgs()
+xd.update_imgs()
+xd.update_imgs()
+
+print('!!! Starting !!!')
+
+#xd.start_turn()
+
+xd.move_to_nearest_pair()
 
 #xd.start()
 #xd.find_nearest_pair()
@@ -16,7 +27,10 @@ xd = NewControl()
 """while True:
     xd.update_imgs()"""
 
-xd.new_move(1, False)
+#xd.new_move(1, False)
+
+#xd.new_rotate(math.pi)
+
 """xd.rotate(math.pi)
 xd.new_move(3, True)
 xd.rotate(math.pi)"""

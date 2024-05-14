@@ -99,7 +99,6 @@ class NewControl:
 
                     return NewPair
 
-
     def main_loop(self):
         last_last_pairs = []
         last_pairs = []
@@ -183,6 +182,54 @@ class NewControl:
                 last_last_pairs = last_pairs
                 last_pairs = pairs
 
+    def start_turn(self):
+        best_pair = None
+        best_distance = None
+        best_angle = None
+
+        self.turtle.reset_odometry()
+        angle = 2*math.pi
+
+        fi = angle
+
+        actual_angle = 0
+        while abs(actual_angle-2*math.pi) > 0.1:
+            image, pc = self.get_turtle_images()
+
+            if image is not None and pc is not None:
+                pairs, poles, vision_image = process_imgs.get_pairs_from_cams(image, pc)
+                self.draw(pairs, poles, vision_image, image, pc, (0, 0))
+
+                if len(pairs) > 0:
+                    for pair in pairs:
+                        distance = (pair.mid.local.x**2 + pair.mid.local.y**2)**(1/2)
+                        if best_distance is None:
+                            best_distance = distance
+                            best_pair = pair
+                            best_angle = actual_angle
+
+                        if distance < best_distance:
+                            best_distance = distance
+                            best_pair = pair
+                            best_angle = actual_angle
+
+            od_x, od_y, od_fi = self.get_odometry()
+            fi = angle - od_fi
+
+            if od_fi > 0:
+                if actual_angle > od_fi:
+                    actual_angle = od_fi + 2*math.pi
+                else:
+                    actual_angle = od_fi
+            elif od_fi < 0:
+                actual_angle = math.pi + math.pi - abs(od_fi)
+
+            direction = fi / abs(fi)
+            self.turtle.cmd_velocity(angular=direction * 0.3)
+            #print(best_angle)
+
+        self.new_rotate(best_angle)
+
     def start(self):
         pairs_turns = []
 
@@ -192,7 +239,7 @@ class NewControl:
             if image is not None and pc is not None:
                 print("15:20")
                 pairs, poles, vision_image = process_imgs.get_pairs_from_cams(image,pc)
-
+                self.draw(pairs,poles,vision_image,image,pc, (0,0))
                 if len(pairs)>0:
                     for pair in pairs:
                         print((pair.mid.local.x) ** 2 + (pair.mid.local.y) ** 2)
@@ -200,9 +247,10 @@ class NewControl:
 
                 pairs_turns.append(pairs)
 
-                self.rotate(math.radians(45))
+                self.new_rotate(math.radians(45), True)
+                time.sleep(1)
 
-            if len(pairs_turns)>=8:
+            if len(pairs_turns) >= 8:
                 break
 
         print("start turn")
@@ -226,8 +274,7 @@ class NewControl:
                     close_index = index
 
         print(close_index)
-        self.rotate(math.radians(45)*close_index)
-
+        self.new_rotate(math.radians(45)*close_index, False)
 
     def get_nearest_pair(self):
         image, pc = self.get_turtle_images()
@@ -259,7 +306,6 @@ class NewControl:
         else:
             return None
 
-
     def find_nearest_pair(self):
         while not self.turtle.is_shutting_down():
             image, pc = self.get_turtle_images()
@@ -290,9 +336,9 @@ class NewControl:
                     print('Turn = 0')
                     break
                 else:
-                    self.move(-0.1, 0.3)
-                    self.rotate(Turn * math.pi / 2, 0.5)
-                    self.move(0.1, 0.3)
+                    self.new_move(-0.1, True)
+                    self.new_rotate(Turn * math.pi / 2)
+                    self.new_move(0.1, True)
 
                     Turn = 0
 
@@ -377,32 +423,27 @@ class NewControl:
         image = self.turtle.get_rgb_image()
         pc = self.turtle.get_point_cloud()
 
-        # TODO: add check that pc is not NoneType: "np.isnan(var)"
         if image is not None and not np.isnan(pc[0][0][0]):
             return image, pc
         else:
             return None, None
 
-    def move2xyf(self, x,y,gamma, fast=False):
+    def move2xyf(self, x,y,gamma, speed_up=False):
         fi = math.atan2(y,x) - math.pi/2
         dist = math.sqrt(pow(x,2)+pow(y,2))
 
-        if not fast:
-            self.rotate(fi)
-            self.move(dist)
-            self.rotate(-fi+gamma)
-        else:
-            self.rotate(fi)
-            self.move(dist,0.5)
-            self.rotate(-fi + gamma)
+        self.new_rotate(fi)
+        self.new_move(dist, speed_up)
+        self.new_rotate(-fi+gamma)
 
     def get_odometry(self):
-        a,b,gamma = self.turtle.get_odometry()
+        a, b, gamma = self.turtle.get_odometry()
 
         x = -b
         y = a
         fi = gamma
-        return x,y,fi
+
+        return x, y, fi
 
     def rotate(self, pl_fi, speed = 0.3):
         self.turtle.reset_odometry()
@@ -422,6 +463,45 @@ class NewControl:
             self.turtle.cmd_velocity(angular=direction * speed)
         self.turtle.cmd_velocity(angular=0)
         time.sleep(1)
+
+    def new_rotate(self, angle, speed_up=False):
+        if angle > 2 * math.pi:
+            raise ValueError('Angle bigger than 2pi')
+        elif angle == math.pi:
+            raise ValueError('Angle is pi')
+
+        # TODO: solve rotation for pi
+
+        if speed_up:
+            speed = 0.5
+            tolerance = 0.03
+        else:
+            speed = 0.3
+            tolerance = 0.01
+
+        self.turtle.reset_odometry()
+
+        if angle > math.pi:
+            angle = -math.pi + (angle - math.pi)
+        elif angle < -math.pi:
+            angle = math.pi + (angle + math.pi)
+
+        fi_err = angle
+
+        while abs(fi_err) > tolerance:
+            od_x, od_y, od_fi = self.get_odometry()
+            od_angle = od_fi
+
+            fi_err = angle - od_angle
+
+            direction = fi_err / abs(fi_err)
+
+            self.turtle.cmd_velocity(angular=direction * speed)
+
+        if not speed_up:
+            self.turtle.cmd_velocity(angular=0)
+            time.sleep(1)
+
 
     def move(self, pl_dist, speed = 0.1):
         self.turtle.reset_odometry()
@@ -443,12 +523,19 @@ class NewControl:
         time.sleep(1)
 
     def new_move(self, distance, speed_up=False):
+        if abs(distance) < 1 and speed_up is True:
+            speed_up = False
+
+        if speed_up:
+            tolerance = 0.03
+        else:
+            tolerance = 0.01
+
         self.turtle.reset_odometry()
 
         dist_err = distance
 
-        while abs(dist_err) > 0.01:
-            print('10')
+        while abs(dist_err) > tolerance:
             od_x, od_y, od_fi = self.get_odometry()
             od_distance = od_y
 
@@ -456,10 +543,10 @@ class NewControl:
 
             direction = dist_err / abs(dist_err)
 
-            speed_up_time = 0.2
-            slow_down_time = 0.1
-            fast_speed = 1
-            slow_speed = 0.3
+            speed_up_time = 0.3
+            slow_down_time = 0.2
+            fast_speed = 0.5
+            slow_speed = 0.1
 
             actual_speed = slow_speed
             if speed_up:
@@ -472,6 +559,8 @@ class NewControl:
             else:
                 actual_speed = slow_speed
             self.turtle.cmd_velocity(linear=direction * actual_speed)
-        self.turtle.cmd_velocity(linear=0)
-        time.sleep(1)
+
+        if not speed_up:
+            self.turtle.cmd_velocity(linear=0)
+            time.sleep(1)
 

@@ -71,6 +71,9 @@ class PolePCPos:
 
         for i in range(-5, 5):
             for j in range(-5, 5):
+                if r_mid[1] + i >= len(pc) or r_mid[0] + j >= len(pc[0]):
+                    continue
+
                 point = pc[r_mid[1] + i][r_mid[0] + j]
                 if not np.isnan(point[0]) and not np.isnan(point[1]) and not np.isnan(point[2]):
                     dx += point[0]
@@ -182,8 +185,12 @@ class Position:
 
 class Pair:
     def __init__(self,pole_1,pole_2):
-        self.pole_1 = pole_1
-        self.pole_2 = pole_2
+        if pole_1.pos.x < pole_2.pos.x:
+            self.pole_1 = pole_1
+            self.pole_2 = pole_2
+        else:
+            self.pole_1 = pole_2
+            self.pole_2 = pole_1
 
         self.mid = None
 
@@ -197,15 +204,25 @@ class Pair:
 
 
     def __set_mid(self):
-        mid_x = self.pole_1.pos.x + (self.pole_2.pos.x - self.pole_1.pos.x) / 2
-        mid_y = self.pole_1.pos.y + (self.pole_2.pos.y - self.pole_1.pos.y) / 2
+        print(0.15)
+        vector_x = self.pole_2.pos.x - self.pole_1.pos.x
+        vector_y = self.pole_2.pos.y - self.pole_1.pos.y
+        vector_z = self.pole_2.pos.z - self.pole_1.pos.z
+
+        size = (vector_x**2 + vector_y**2)**(1/2)
+
+        vector_x = 0.035*vector_x/size
+        vector_y = 0.035*vector_y/size
+
+        mid_x = self.pole_1.pos.x + (self.pole_2.pos.x - self.pole_1.pos.x) * 0.15
+        mid_y = self.pole_1.pos.y + (self.pole_2.pos.y - self.pole_1.pos.y) * 0.15
         mid_z = self.pole_1.pos.z + (self.pole_2.pos.z - self.pole_1.pos.z) / 2
 
         topdown_mid_x = round(self.pole_1.topdown_pos.x + (self.pole_2.topdown_pos.x - self.pole_1.topdown_pos.x) / 2)
         topdown_mid_y = round(self.pole_1.topdown_pos.y + (self.pole_2.topdown_pos.y - self.pole_1.topdown_pos.y) / 2)
 
         self.mid = Position(LocalPosition(mid_x,mid_y,mid_z), TopdownPosition(topdown_mid_x,topdown_mid_y))
-
+        print(self.pole_1.color, self.pole_2.color)
 
     def __set_help(self):
         top_help_x1 = round(self.mid.topdown.x + (self.pole_2.topdown_pos.y - self.pole_1.topdown_pos.y) * 8)
