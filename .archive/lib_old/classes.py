@@ -204,7 +204,7 @@ class Pair:
 
 
     def __set_mid(self):
-        #print(0.15)
+        print(0.15)
         vector_x = self.pole_2.pos.x - self.pole_1.pos.x
         vector_y = self.pole_2.pos.y - self.pole_1.pos.y
         vector_z = self.pole_2.pos.z - self.pole_1.pos.z
@@ -222,7 +222,7 @@ class Pair:
         topdown_mid_y = round(self.pole_1.topdown_pos.y + (self.pole_2.topdown_pos.y - self.pole_1.topdown_pos.y) / 2)
 
         self.mid = Position(LocalPosition(mid_x,mid_y,mid_z), TopdownPosition(topdown_mid_x,topdown_mid_y))
-        #print(self.pole_1.color, self.pole_2.color)
+        print(self.pole_1.color, self.pole_2.color)
 
     def __set_help(self):
         top_help_x1 = round(self.mid.topdown.x + (self.pole_2.topdown_pos.y - self.pole_1.topdown_pos.y) * 8)
@@ -317,6 +317,3 @@ class Pair:
 
 
         self.park = Position(LocalPosition(local_p_x, local_p_y, local_p_z), TopdownPosition(topdown_t_x, topdown_t_y))
-
-
-

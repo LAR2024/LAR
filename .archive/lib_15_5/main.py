@@ -1,17 +1,13 @@
-import cv2
-import signal
 import os
 import numpy as np
 import math
 import time
 
-from robolab_turtlebot import Turtlebot, detector
+from robolab_turtlebot import Turtlebot
 
-
-from lib import classes
-from lib import process_imgs
-from lib import random
-from lib import draw_imgs
+from lib_old import process_imgs
+from lib_old import random
+from lib_old import draw_imgs
 
 
 random.main_pid = os.getpid()
@@ -49,7 +45,7 @@ class NewControl:
 
         actual_angle = 0
         while abs(actual_angle-2*math.pi) > 0.3:
-            image, pc = self.get_turtle_images(no_wait = True)
+            image, pc = self.get_turtle_images()
 
             if image is not None and pc is not None:
                 pairs, poles, vision_image = process_imgs.get_pairs_from_cams(image, pc)
@@ -69,7 +65,7 @@ class NewControl:
                             best_angle = actual_angle
 
             od_x, od_y, od_fi = self.get_odometry()
-
+            print(actual_angle, od_fi)
             fi = angle - od_fi
 
             if od_fi > 0:
@@ -79,9 +75,8 @@ class NewControl:
                     actual_angle = od_fi
             elif od_fi < 0 and actual_angle != 0:
                 actual_angle = math.pi + math.pi - abs(od_fi)
-            print(actual_angle, od_fi, fi)
+            print(actual_angle, od_fi)
             direction = fi / abs(fi)
-            print(direction)
             self.turtle.cmd_velocity(angular=direction * 0.3)
 
         self.turtle.cmd_velocity(angular=0)
@@ -127,30 +122,20 @@ class NewControl:
 
         :return:
         """
-        retry = 0
         while not self.turtle.is_shutting_down():
             image, pc = self.get_turtle_images()
 
             if image is not None and pc is not None:
                 close_pair = self.get_nearest_pair()
 
-                if close_pair is not None:
+                print(close_pair.mid.local.y, close_pair.mid.local.x)
+                fi = math.atan2(close_pair.mid.local.y, close_pair.mid.local.x) - math.pi/2
 
-                    print(close_pair.mid.local.y, close_pair.mid.local.x)
-                    fi = math.atan2(close_pair.mid.local.y, close_pair.mid.local.x) - math.pi/2
-
-                    print(fi)
-                    self.new_rotate(fi)
-                    break
-                else:
-                    retry += 1
-
-            if retry>10:
-                break
+                print(fi)
+                self.rotate(fi)
 
     def move_to_nearest_pair(self):
 
-        Found = False
         Help = False
         Park = False
         Turn = 0
@@ -166,50 +151,30 @@ class NewControl:
 
                 if Turn == 0:
                     print('Turn = 0')
-                    self.turtle.play_sound()
-                    time.sleep(0.3)
-                    self.turtle.play_sound(1)
-                    time.sleep(0.3)
-                    self.turtle.play_sound(2)
-                    time.sleep(0.3)
-                    self.turtle.play_sound(3)
-                    time.sleep(0.3)
-                    self.turtle.play_sound(4)
-                    time.sleep(0.3)
-                    self.turtle.play_sound(5)
-                    time.sleep(0.3)
-                    self.turtle.play_sound(6)
-                    time.sleep(1)
-
                     break
                 else:
-                    print("rotate after move")
                     self.new_move(-0.1, True)
                     self.new_rotate(Turn * math.pi / 2, True)
                     self.new_move(0.2, True)
 
                     Turn = 0
 
-                Found = False
+
                 Help = False
                 Park = False
 
 
 
             if close_pair is None:
-                print("no close pair")
                 if retries >= 10 and retries_try == 0 and Help is False and Park is False:
-                    print("find right")
                     self.new_rotate(-math.pi/4)
                     retries = 0
                     retries_try = 1
                 elif retries >= 10 and retries_try == 1 and Help is False and Park is False:
-                    print("find left")
                     self.new_rotate(math.pi/2)
                     retries = 0
                     retries_try = 0
                 elif Help is False and Park is False:
-                    print("found nothing")
                     retries += 1
 
                 continue
@@ -231,10 +196,7 @@ class NewControl:
 
             print('Turn:',Turn)
 
-            if not Found and not Help and not Park:
-                self.rotate_to_nearest_pair()
-                Found = True
-            elif not Help and not Park:
+            if not Help and not Park:
                 x = close_pair.help.local.x
                 y = close_pair.help.local.y
 
@@ -287,20 +249,12 @@ class NewControl:
                 self.draw(pairs, poles, vision_image, image, pc, (0, 0))
             else:
                 self.eco_draw(image, pc)
-        else:
-            print("image is none and pc is none")
 
-    def get_turtle_images(self, no_wait = False):
-        print("imgs update")
+    def get_turtle_images(self):
         image = self.turtle.get_rgb_image()
-
         pc = self.turtle.get_point_cloud()
 
-        if not no_wait:
-            self.turtle.wait_for_rgb_image()
-            self.turtle.wait_for_point_cloud()
-
-        if image is not None and not np.isnan(pc).all() :
+        if image is not None and not np.isnan(pc[0][0][0]):
             return image, pc
         else:
             return None, None

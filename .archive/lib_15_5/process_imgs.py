@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from lib.classes import Masks, Contours, Pole, Poles, Pair
+from lib_old.classes import Masks, Contours, Pole, Poles, Pair
 
 
 def get_pairs_from_cams(image, pc) -> (list, Poles, any):
