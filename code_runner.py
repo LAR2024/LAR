@@ -1,7 +1,8 @@
 from lib.main import NewControl
 import math
+import time
 
-print("21:41")
+print("15:57")
 
 xd = NewControl()
 
@@ -9,6 +10,7 @@ xd = NewControl()
 
 #xd.rotate(math.pi)
 #xd.move(-0.1)
+
 
 xd.update_imgs()
 xd.update_imgs()

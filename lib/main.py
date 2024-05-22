@@ -24,6 +24,15 @@ random.main_pid = os.getpid()
     fi: counter-clockwise           [rad]
 """
 
+PRESSED = False
+
+def button(data):
+    global PRESSED
+    PRESSED = True
+    print("PRESSED")
+    print(data)
+
+
 
 class NewControl:
     def __init__(self):
@@ -31,6 +40,7 @@ class NewControl:
 
         self.turtle = Turtlebot(rgb=True, pc=True)
         self.turtle.register_bumper_event_cb(random.bumper_cb)
+        self.turtle.register_button_event_cb(button)
         self.turtle.wait_for_point_cloud()
 
     def start_turn(self):
@@ -38,6 +48,12 @@ class NewControl:
 
         :return:
         """
+
+        while not PRESSED:
+            print("wait for button")
+            time.sleep(0.1)
+            pass
+
         best_pair = None
         best_distance = None
         best_angle = None
@@ -145,7 +161,7 @@ class NewControl:
                 else:
                     retry += 1
 
-            if retry>10:
+            if retry>5:
                 break
 
     def move_to_nearest_pair(self):
